@@ -72,12 +72,12 @@ class ImgOptimiser implements ShouldQueue
                 }
             }
 
-
+            $redis = Redis::connection();
 
             if($img_count > $img_limit) {
                 self::dispatch($this->filepath, $this->options)->delay(now()->addDay());
             } elseif($this->filepath == $this->options['optimizedPath'] || $this->filepath == $this->options['croppedPath']) {
-                Redis::sadd('optimized_images', $this->filepath);
+                $redis->sadd('optimized_images', $this->filepath);
             }
         }
     }

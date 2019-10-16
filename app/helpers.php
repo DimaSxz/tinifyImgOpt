@@ -77,6 +77,7 @@ function imageHelper($imagesConfigSet, $filepath) {
     $crop = $config['crop'];
     $optimizedPath = null;
     $croppedPath = null;
+    $redis = Redis::connection();
 
     if ($optimize) {
         $optimizedPath = preg_replace('/\/\/+/', '/',
@@ -86,7 +87,7 @@ function imageHelper($imagesConfigSet, $filepath) {
                 . ($config['embeddedPath'] ? '/' . $imagesConfigSet . '/' : '')
                 . basename($filepath))
         );
-        if($optimize === true && Redis::sismember('optimized_images', $filepath)) {
+        if($optimize === true && $redis->sismember('optimized_images', $filepath)) {
             $config['optimize'] = false;
         } elseif(is_string($optimize) && !file_exists(public_path($optimizedPath))) {
             $config['optimizedPath'] = $optimizedPath;
