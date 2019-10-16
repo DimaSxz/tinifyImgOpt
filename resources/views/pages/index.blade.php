@@ -13,7 +13,7 @@
                         <img class="card-img-top"
                              width="{{ env('IMG_THUMB_WIDTH') }}"
                              height="{{ env('IMG_THUMB_HEIGHT') }}"
-                             src="{{ \App\Helpers\ImgTinyOptimiser::getOptimisedThumb($category->img_path) }}" alt="{{ $category->name }}">
+                             src="{{ imageHelper('category_thumb', $category->img_path) }}" alt="{{ $category->name }}">
                     @endif
                     <div class="card-body">
                         <h4 class="card-title">{{ $category->name }}</h4>

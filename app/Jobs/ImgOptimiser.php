@@ -7,50 +7,84 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Redis;
 
 class ImgOptimiser implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $filepath;
-    protected $method;
-    protected $width;
-    protected $height;
-    protected $thumb_path;
-    protected $optimised_path;
+    protected $options;
 
-    public function __construct($filepath)
+    public function __construct($filepath, $options = [
+        'width' => null,
+        'height' => null,
+        'optimizedPath' => null,
+        'croppedPath' => null,
+        'crop' => false,
+        'optimize' => false,
+    ])
     {
         $this->filepath = $filepath;
-        $this->width = (int) env('IMG_THUMB_WIDTH');
-        $this->height = (int) env('IMG_THUMB_HEIGHT');
-        $this->method = env('IMG_THUMB_METHOD');
-        $this->thumb_path = env('IMG_THUMB_PATH') . basename($filepath);
-        $this->optimised_path = env('IMG_OPTIMISED_PATH') . basename($filepath);
+        $this->options = $options;
     }
 
     public function handle()
     {
-        \Tinify\setKey(env('TINIFY_API_KEY'));
-        \Tinify\validate();
-        $img_lim = \Tinify\getCompressionCount();
-        if($img_lim < env('TINIFY_IMG_LIMIT')) {
-            if (!file_exists(public_path($this->optimised_path))) {
-                $source = \Tinify\fromFile(public_path($this->filepath));
-                $source->toFile(public_path($this->optimised_path)); //optimisation file
+        $crop = isset($this->options['crop']) ? $this->options['crop'] : false;
+        $optimize = isset($this->options['optimize']) ? $this->options['optimize'] : false;
+
+        if ($crop || $optimize) {
+
+            $img_limit = env('TINIFY_IMG_LIMIT');
+            \Tinify\setKey(env('TINIFY_API_KEY'));
+            \Tinify\validate();
+            $img_count = \Tinify\getCompressionCount();
+
+            $pubFile = public_path($this->filepath);
+
+            if($optimize) {
+                $pubOptPath = public_path($this->options['optimizedPath']);
+                if (!file_exists($pubOptPath)) {
+                    $this->createPath($this->options['optimizedPath']);
+                    if(++$img_count <= $img_limit) {
+                        $source = \Tinify\fromFile($pubFile);
+                        $source->toFile($pubOptPath); //optimized file
+                    }
+                }
             }
 
-            if (!file_exists(public_path($this->thumb_path))) {
-                $resized = \Tinify\fromFile(public_path($this->optimised_path))
-                    ->resize([
-                        'method' => $this->method,
-                        'width' => $this->width,
-                        'height' => $this->height
-                    ]);
-                $resized->toFile(public_path($this->thumb_path)); //resize optimised file
+            if($crop) {
+                $pubCrpPath = public_path($this->options['croppedPath']);
+                if (!file_exists($pubCrpPath)) {
+                    $this->createPath($this->options['croppedPath']);
+                    if(++$img_count <= $img_limit) {
+                        $source = \Tinify\fromFile($pubFile);
+                        $resized = $source->resize([
+                            'method' => $this->options['cropMethod'],
+                            'width' => $this->options['width'],
+                            'height' => $this->options['height']
+                        ]);
+                        $resized->toFile($pubCrpPath); //resized file
+                    } elseif($optimize && public_path($this->options['optimizedPath'])) {
+                        $this->options['optimize'] = false;
+                    }
+                }
             }
-        } else {
-            self::dispatch($this->filepath)->delay(now()->addDay()); //restart job if it's can't be proceed
+
+
+
+            if($img_count > $img_limit) {
+                self::dispatch($this->filepath, $this->options)->delay(now()->addDay());
+            } elseif($this->filepath == $this->options['optimizedPath'] || $this->filepath == $this->options['croppedPath']) {
+                Redis::sadd('optimized_images', $this->filepath);
+            }
         }
+    }
+
+    private function createPath($filepath) {
+        $pathWithoutFile = public_path(pathinfo($filepath)['dirname']);
+        if (!file_exists($pathWithoutFile))
+            mkdir($pathWithoutFile, 0777, true);
     }
 }

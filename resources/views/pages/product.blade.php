@@ -2,7 +2,7 @@
 
 @section ('content')
     <div class="container-fluid text-center"
-             style="background: url({{ \App\Helpers\ImgTinyOptimiser::getOptimisedImg($product->img_path) }}) no-repeat; background-size: cover; width:100%; height:60vh;"
+             style="background: url({{ imageHelper('optimized', $product->img_path) }}) no-repeat; background-size: cover; width:100%; height:60vh;"
     >
     </div>
     <div class="container-fluid" style="color: white; background: rgba(0,0,0,.7); padding: 20px;">

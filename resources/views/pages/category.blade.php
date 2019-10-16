@@ -2,7 +2,7 @@
 
 @section ('content')
     <section class="jumbotron text-center"
-        style="background: url({{ \App\Helpers\ImgTinyOptimiser::getOptimisedImg($category->img_path) }}) no-repeat; background-size: cover;"
+        style="background: url({{ imageHelper('optimized', $category->img_path) }}) no-repeat; background-size: cover;"
     >
         <div class="container" style="color: white; background: rgba(0,0,0,.7); padding: 20px;">
             <h1 class="jumbotron-heading">{{ $category->name }}</h1>
@@ -24,9 +24,7 @@
                     <div class="card mb-4 box-shadow">
                         @if($product->img_path)
                             <img class="card-img-top"
-                                 width="{{ env('IMG_THUMB_WIDTH') }}"
-                                 height="{{ env('IMG_THUMB_HEIGHT') }}"
-                                 src="{{ \App\Helpers\ImgTinyOptimiser::getOptimisedThumb($product->img_path) }}" alt="{{ $product->name }}">
+                                 src="{{ imageHelper('product_thumb', $product->img_path) }}" alt="{{ $product->name }}">
                         @endif
                         <div class="card-body">
                             <h4 class="card-title">{{ $product->name }}</h4>

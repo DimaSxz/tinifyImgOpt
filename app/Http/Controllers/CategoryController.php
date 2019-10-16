@@ -49,7 +49,6 @@ class CategoryController extends Controller
             'img_path' => $request->filepath
         ]);
         $category->save();
-        ImgTinyOptimiser::optimiseImg($request->filepath);
         return $this->dataForAdmin();
     }
 
@@ -92,7 +91,6 @@ class CategoryController extends Controller
         $category->description = $request->description;
         $category->img_path= $request->filepath;
         $category->save();
-        ImgTinyOptimiser::optimiseImg($request->filepath);
         return $this->dataForAdmin();
     }
 

@@ -51,7 +51,6 @@ class ProductController extends Controller
             'img_path' => $request->filepath
         ]);
         $product->save();
-        ImgTinyOptimiser::optimiseImg($request->filepath);
         $product->categories()->attach($request->categories);
         return $this->dataForAdmin();
     }
@@ -95,7 +94,6 @@ class ProductController extends Controller
         $product->price = $request->price;
         $product->img_path = $request->filepath;
         $product->save();
-        ImgTinyOptimiser::optimiseImg($request->filepath);
         $product->categories()->detach();
         $product->categories()->attach($request->categories);
         return $this->dataForAdmin();
