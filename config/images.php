@@ -22,10 +22,10 @@ return [
         'cropMethod' => 'thumb',
     ],
     'optimized' => [
-        'optimize' => true,
+        'optimize' => env('IMG_DEFAULT_OPTIMISE'),
     ],
     'optimize_crop' => [
         'optimize' => true,
         'crop' => env('IMG_DEFAULT_CROP'),
-    ]
+    ],
 ];
